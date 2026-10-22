@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { Router } from '@angular/router';
+import { Api } from '../../services/servAPI/api';
 
 @Component({
   selector: 'app-bienvenido',
@@ -12,6 +14,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 export class Bienvenido {
   formulario: FormGroup;
   mostrarContrasena = false;
+  errorLogin: string | null = null;
 
   campos = [
     {
@@ -31,7 +34,9 @@ export class Bienvenido {
 
   constructor(
     private fb: FormBuilder,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private router: Router,
+    private apiService: Api
   ) {
     this.formulario = this.fb.group({});
     this.campos.forEach((campo) => {
@@ -53,10 +58,38 @@ export class Bienvenido {
 
   enviarFormulario() {
     if (this.formulario.valid) {
-      alert('Se inició sesión correctamente');
+      const credenciales = {
+        email: this.formulario.value.correo,
+        password: this.formulario.value.contrasena,
+      };
+
+      this.apiService.login(credenciales).subscribe({
+        next: () => {
+          this.router.navigate(['/principal']);
+        },
+        error: (error) => {
+          this.errorLogin = this.obtenerMensajeError(error);
+          alert(this.errorLogin);
+        },
+      });
     } else {
       this.formulario.markAllAsTouched();
-      alert('Datos incorrectos');
+    }
+  }
+
+  private obtenerMensajeError(error: any): string {
+    if (error.error?.message) {
+      return error.error.message;
+    }
+    switch (error.status) {
+      case 400:
+        return 'Credenciales inválidas';
+      case 401:
+        return 'No autorizado';
+      case 500:
+        return 'Error interno del servidor';
+      default:
+        return 'Error al iniciar sesión';
     }
   }
 }

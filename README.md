@@ -1,136 +1,94 @@
-# Práctica 4: Instalación, Configuración e Interfaz de Inicio en Angular (Parte 1)
-
-Este repositorio contiene el código fuente desarrollado para la **Práctica 4**, la cual representa la primera parte del sistema de registro e inicio de sesión construido con **Angular**. En esta etapa se sienta la arquitectura base del proyecto frontend mediante componentes *standalone*, internacionalización (multilenguaje), formularios reactivos y enrutamiento dinámico.
-
+# Práctica 5: Sistema de Registro de Usuarios en Angular (Parte 2)
+Este repositorio contiene el código fuente desarrollado para la Práctica 5, la cual representa la segunda parte del sistema de registro de usuarios construido con Angular. En esta etapa se implementa el flujo completo de captura de datos mediante formularios reactivos, internacionalización (multilenguaje) y gestión de estado mediante servicios y librerías reactivas.
 ---
-
 ## 📋 Tabla de Contenidos
-
-* [Descripción del Proyecto](#descripción-del-proyecto)
-* [Características Principales](#características-principales)
-* [Objetivos](#objetivos)
-* [Arquitectura y Estructura](#arquitectura-y-estructura)
-* [Componentes y Servicios Implementados](#componentes-y-servicios-implementados)
-* [Requisitos Previos](#requisitos-previos)
-* [Instalación y Ejecución](#instalación-y-ejecución)
-* [Flujo de Pruebas y Validación](#flujo-de-pruebas-y-validación)
-
+> Descripción del Proyecto
+> Características Principales
+> Objetivos
+> Arquitectura y Estructura
+> Componentes y Servicios Implementados
+> Requisitos Previos
+> Instalación y Ejecución
+> Flujo de Pruebas y Validación
 ---
-
 ## 📄 Descripción del Proyecto
-
-La aplicación establece la interfaz inicial de la plataforma de registro, implementando dos vistas fundamentales:
-
-1. **Bienvenido (`/bienvenido`):** Formulario de inicio de sesión reactivo con campos de correo y contraseña, alternancia de visibilidad de contraseña y selector de idioma en tiempo real.
-2. **Principal (`/principal`):** Menú de navegación general compuesto por 6 tarjetas interactivas (*Mi cuenta*, *Registro*, *Notificaciones*, *ChatBot*, *Aviso de privacidad* y *Cerrar sesión*).
-
-El sistema utiliza la biblioteca **`@ngx-translate/core`** para proporcionar soporte multilenguaje (español e inglés) mediante archivos JSON externos, garantizando una arquitectura libre de textos embebidos directamente en el código (*cero hardcodeo*).
-
+La aplicación amplía la primera parte del sistema (que incluía los componentes bienvenido y principal), agregando un flujo modular de registro compuesto por cuatro etapas:
+1. Datos Personales
+2. Datos de Cuenta
+3. Dirección / Domicilio
+4. Fotografía de Perfil
+El sistema utiliza un servicio de progreso para mantener en tiempo real el estado de los pasos completados y el paso activo en una barra de progreso visual, permitiendo navegar de manera interactiva entre las distintas secciones. Además, se evita el hardcodeo mediante la abstracción de campos en servicios dedicated y soporte multilenguaje mediante @ngx-translate/core.
 ---
-
 ## ✨ Características Principales
-
-* **Componentes Standalone:** Estructura modular moderna sin necesidad de `NgModule`.
-* **Internacionalización (i18n) con `ngx-translate`:** Cambio dinámico de idioma (Español / Inglés) sin recargar el navegador mediante archivos de traducción en la carpeta `public/lenguajes/`.
-* **Formularios Reactivos (`ReactiveFormsModule`):** Manejo de campos y validaciones dinámicas para credenciales de acceso.
-* **Aislamiento de Estilos CSS:** Encapsulamiento de estilos a nivel de componente junto con estilos globales en `src/styles.css`.
-* **Enrutamiento y Navegación:** Configuración de redirecciones en `app.routes.ts` y consumo de directivas `<router-outlet />`.
-
+> Formularios Reactivos (ReactiveFormsModule): Manejo dinámico de validaciones (campos requeridos, expresiones regulares para correos, etc.).
+> Gestión de Estado con RxJS: Utilización de BehaviorSubject y Observables para coordinar el avance entre componentes independientes de forma desacoplada.
+> Cero Hardcodeo: Definición de campos e itinerarios de formularios mediante servicios centralizados.Internacionalización (i18n): Cambio dinámico de idioma (Español / Inglés) en tiempo de ejecución.
+> Componentes Standalone: Arquitectura modular siguiendo las mejores prácticas de Angular.
 ---
-
 ## 🎯 Objetivos
-
 ### Objetivo General
-
-Crear y configurar una aplicación en Angular estableciendo la estructura base de componentes, enrutamiento e internacionalización para eliminar el *hardcodeo* de datos en las vistas de inicio de sesión y menú principal.
-
+Implementar el proceso completo de registro de usuarios mediante formularios reactivos y un servicio centralizado que gestione el avance del proceso, manteniendo una arquitectura mantenible y escalable.
 ### Objetivos Particulares
-
-1. Instalar y configurar el entorno de desarrollo con Node.js, `nvm` y Angular CLI.
-2. Crear la estructura inicial del proyecto e instalar las dependencias de internacionalización (`@ngx-translate/core` y `@ngx-translate/http-loader`).
-3. Diseñar e implementar los componentes `bienvenido` y `principal` dentro de la carpeta `componentes/`.
-4. Configurar las rutas principales del sistema en `app.routes.ts`.
-
+1. Crear los componentes registro, personal, cuenta, direccion y fotografia.
+2. Implementar ProgresoService con BehaviorSubject para llevar el control de la barra de progreso.
+3. Abstraer la configuración de formularios en servicios dedicados (PersonalService, CuentaService, DireccionService, RegistroService).
+4. Configurar la navegación completa de rutas en app.routes.ts.
 ---
-
-## 🏗️ Arquitectura y Estructura
+## 🏗️ Arquitectura y Estructurasrc/
 ```texto
-src/
-├── app/
-│   ├── componentes/
-│   │   ├── bienvenido/    # Componente de inicio de sesión (Login)
-│   │   │   ├── bienvenido.css
-│   │   │   ├── bienvenido.html
-│   │   │   └── bienvenido.ts
-│   │   └── principal/     # Componente del menú principal de tarjetas
-│   │       ├── principal.css
-│   │       ├── principal.html
-│   │       └── principal.ts
-│   ├── app.config.ts      # Configuración de proveedores globales (HttpClient, Translate)
-│   ├── app.routes.ts     # Definición de rutas y redirecciones de la aplicación
-│   └── app.ts            # Componente raíz con 
-├── public/
-│   ├── iconos/            # Recursos gráficos en formato SVG para la interfaz
-│   └── lenguajes/         # Archivos de traducción JSON (es.json, en.json)
-└── styles.css             # Estilos globales de la aplicación (degradado de fondo)
+└── app/
+    ├── componentes/
+    │   ├── registro/    # Vista principal del flujo con barra de progreso
+    │   ├── personal/    # Formulario de datos personales
+    │   ├── cuenta/      # Formulario de datos de cuenta y credenciales
+    │   ├── direccion/   # Formulario de datos de domicilio
+    │   └── fotografia/  # Vista de requisitos y carga de imagen
+    ├── services/
+    │   ├── progreso.ts  # Manejo del estado global de pasos (RxJS)
+    │   ├── registro.ts  # Configuración e íconos del flujo de registro
+    │   ├── personal.ts  # Configuración del formulario personal
+    │   ├── cuenta.ts    # Configuración del formulario cuenta
+    │   └── direccion.ts # Configuración del formulario dirección
+    └── app.routes.ts    # Mapeo de rutas de la aplicación
 ```
 ---
 ## ⚙️ Componentes y Servicios Implementados
-
-| Módulo / Elemento | Descripción / Responsabilidad |
+| Módulo / Servicio | Descripción / Responsabilidad |
 | --- | --- |
-| **`app.config.ts`** | Registra los proveedores de HTTP (`provideHttpClient`) y del servicio de traducción (`provideTranslateService` y `provideTranslateHttpLoader`). |
-| **`app.routes.ts`** | Mapea las rutas `/bienvenido`, `/principal` y establece la redirección por defecto hacia `/bienvenido`. |
-| **`Bienvenido`** | Gestiona la vista de Login, validando los campos de correo/contraseña, alternando la visibilidad del texto y permitiendo la selección de idioma. |
-| **`Principal`** | Renderiza el menú de tarjetas con iconos. Contiene las acciones de navegación hacia la ruta de registro (`/registro`) y la de retorno (`/bienvenido`). |
-| **Archivos i18n** | Contienen los diccionarios de clave-valor para los textos en español (`public/lenguajes/es.json`) e inglés (`public/lenguajes/en.json`). |
-
+| ProgresoService  | Mantiene pasoActual y pasosCompletados usando BehaviorSubject. |
+| RegistroService | Provee los metadatos (rutas, íconos, traducciones) de los 4 pasos del registro. |
+| Personal | Formulario para: Nombre, Primer Apellido, Segundo Apellido, Fecha de Nacimiento, Género, Nacionalidad. |
+| Cuenta | Formulario para: Teléfono, Correo Electrónico (con regex pattern), Usuario, Contraseña, Ocupación, Rol. |
+| Direccion | Formulario para: Código Postal, Estado, Ciudad, Colonia, Calle, Núm. Ext, Núm. Int (Opcional), Referencia (Opcional). |
+| Fotografia | Instrucciones para la toma/subida de fotografía y cierre del ciclo de registro. |
 ---
-
 ## 🛠️ Requisitos Previos
-
 Antes de ejecutar este proyecto, asegúrate de contar con:
-
-* **Node.js:** Versión 18 o superior (gestionado preferentemente con `nvm`).
-* **Angular CLI:** Versión 17 o superior instalada de forma global (`npm install -g @angular/cli`).
-* **Navegador Web:** Google Chrome, Firefox, Edge o Safari.
-
----
-
+> Node.js (Versión LTS recomendada)
+> Angular CLI (v17+)
+> Haber ejecutado e integrado los componentes previos de la Parte 1 (bienvenido y principal).
+--- 
 ## 🚀 Instalación y Ejecución
-
-1. **Clonar el repositorio o situarse en el directorio del proyecto:**
-
-```bash
+1. Clonar el repositorio o situarse en el directorio del proyecto:
+```
 cd primeraAplicacion
 ```
----
-2. **Instalar dependencias e instalar la biblioteca de traducción:
-```bash
+2. Instalar dependencias (si aplica):
+```
 npm install
-npm install @ngx-translate/core @ngx-translate/http-loader
 ```
 3. Iniciar el servidor de desarrollo:
-```bash
+```
 ng serve
 ```
 4. Navegar a la aplicación:
-    Abre tu navegador e ingresa a http://localhost:4200/. La aplicación te redirigirá automáticamente a http://localhost:4200/bienvenido.
---- 
+Abre tu navegador e ingresa a http://localhost:4200/.
+---
 ## 🧪 Flujo de Pruebas y Validación
-1. Inicio de Sesión (/bienvenido):
-    > Al acceder a la aplicación se cargará el formulario de inicio de sesión.
-
-    > Prueba ingresar un correo y una contraseña. Puedes presionar el icono del ojo para alternar entre mostrar u ocultar la contraseña.
-
-    > Selecciona el botón English o Español en la parte inferior para comprobar cómo cambian todos los textos de la pantalla al instante sin recargar la página.
-
-2. Navegación Manual a Menú (/principal):
-
-    > Escribe en la barra de direcciones del navegador http://localhost:4200/principal.
-
-    > Observa el menú compuesto por 6 tarjetas con sus respectivos iconos gráficos SVG.
-
-    > Al presionar la tarjeta Cerrar sesión (LOGOUT), la aplicación te redirigirá nuevamente a la vista de inicio de sesión (/bienvenido).
-
-Nota: En esta primera parte la aplicación no se conecta a un backend ni a una base de datos; las validaciones y traducciones se ejecutan íntegramente en el cliente.
+1. Inicio: Accede a la ruta /registro desde la tarjeta Registro de la pantalla principal.
+2. Paso 1 - Personal: Selecciona el ícono Personal, completa los campos y da clic en Enviar. Se marcará el paso como completado y serás redirigido a Cuenta.
+3. Paso 2 - Cuenta: Ingresa un correo electrónico válido (validado por patrón) y llena los demás campos requeridos.
+4. Paso 3 - Dirección: Completa los datos requeridos. Nota que Número Interior y Referencia son opcionales.
+5. Paso 4 - Fotografía: Revisa las especificaciones visuales y da clic en Continuar.
+6. Resultado: Al finalizar, el sistema redirige a la pantalla /registro, donde se mostrarán los 4 pasos con su estado completado (palomita verde/ícono de confirmación).
+    Nota: La aplicación no cuenta actualmente con persistencia en base de datos o comunicación backend; la información capturada se valida únicamente en el cliente y el avance se mantiene en memoria durante la sesión actual.

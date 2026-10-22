@@ -1,0 +1,7 @@
+{
+    "/api": {
+        "target": "http://developer.jquiroz.net:3005",
+        "secure": false,
+        "changeOrigin": true
+    }
+}
