@@ -1,4 +1,3 @@
-<!-- COdigo 6: recorre el arreglo pasos mediante la directiva @for, dibujando el circulo correspondiente a cada paso -->
 <div class="registro">
     <h1>{{ 'REGISTER' | translate }}</h1>
 
@@ -20,7 +19,19 @@
             </div>
             }
         </div>
-        <button class="registrar">{{ 'REG' | translate }}</button>
+
+        <button class="registrar" (click)="registrar()"
+            [disabled]="registrando || !(pasosComp[0] && pasosComp[1] && pasosComp[2])">
+            @if (!registrando) {
+            <span>{{ 'REG' | translate }}</span>
+            } @else {
+            <span>{{ 'REGISTRANDO' | translate }}...</span>
+            }
+        </button>
+
+        @if (errorRegistro) {
+        <div class="mensaje-error">{{ errorRegistro }}</div>
+        }
     </div>
 
     <div class="selector-idioma">
