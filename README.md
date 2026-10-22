@@ -1,94 +1,151 @@
-# Práctica 5: Sistema de Registro de Usuarios en Angular (Parte 2)
-Este repositorio contiene el código fuente desarrollado para la Práctica 5, la cual representa la segunda parte del sistema de registro de usuarios construido con Angular. En esta etapa se implementa el flujo completo de captura de datos mediante formularios reactivos, internacionalización (multilenguaje) y gestión de estado mediante servicios y librerías reactivas.
+# Práctica 6: Conexión con la API e Integración de Autenticación (Parte 3)
+
+Este repositorio contiene el código fuente desarrollado para la **Práctica 6**, la cual representa la tercera parte y la integración final del sistema de registro e inicio de sesión en **Angular**. En esta etapa se conecta la interfaz de usuario desarrollada previamente con un servidor backend real a través de solicitudes HTTP REST, autenticación basada en tokens JWT, un interceptor HTTP y la configuración de un proxy para el control de errores CORS.
+
 ---
+
 ## 📋 Tabla de Contenidos
-> Descripción del Proyecto
-> Características Principales
-> Objetivos
-> Arquitectura y Estructura
-> Componentes y Servicios Implementados
-> Requisitos Previos
-> Instalación y Ejecución
-> Flujo de Pruebas y Validación
+
+* [Descripción del Proyecto](#descripción-del-proyecto)
+* [Características Principales](#características-principales)
+* [Objetivos](#objetivos)
+* [Endpoints de la API](#endpoints-de-la-api)
+* [Arquitectura y Estructura](#arquitectura-y-estructura)
+* [Componentes y Servicios Implementados](#componentes-y-servicios-implementados)
+* [Requisitos Previos](#requisitos-previos)
+* [Instalación y Ejecución](#instalación-y-ejecución)
+* [Flujo de Pruebas y Validación](#flujo-de-pruebas-y-validación)
+
 ---
+
 ## 📄 Descripción del Proyecto
-La aplicación amplía la primera parte del sistema (que incluía los componentes bienvenido y principal), agregando un flujo modular de registro compuesto por cuatro etapas:
-1. Datos Personales
-2. Datos de Cuenta
-3. Dirección / Domicilio
-4. Fotografía de Perfil
-El sistema utiliza un servicio de progreso para mantener en tiempo real el estado de los pasos completados y el paso activo en una barra de progreso visual, permitiendo navegar de manera interactiva entre las distintas secciones. Además, se evita el hardcodeo mediante la abstracción de campos en servicios dedicated y soporte multilenguaje mediante @ngx-translate/core.
+
+En esta tercera fase, la aplicación deja de trabajar con datos simulados y pasa a consumir servicios web reales de una API RESTful:
+
+1. **Autenticación con Token:** La pantalla de bienvenida (`/bienvenido`) envía las credenciales mediante un método `POST` y almacena los tokens devueltos (`accessToken` y `refreshToken`) en el `localStorage` del navegador.
+2. **Interceptor HTTP:** Intercepta cada solicitud saliente para adjuntar automáticamente la cabecera `Authorization: Bearer <token>` y maneja de forma transparente los errores de no autorización (HTTP 401) para renovar el token expirable sin interrumpir la sesión.
+3. **Persistencia del Flujo de Registro:** Los formularios de *Personal*, *Cuenta* y *Dirección* respaldan de forma temporal sus datos en el `localStorage`, acumulando el objeto completo que se enviará al endpoint `/users` al confirmar el registro.
+
 ---
+
 ## ✨ Características Principales
-> Formularios Reactivos (ReactiveFormsModule): Manejo dinámico de validaciones (campos requeridos, expresiones regulares para correos, etc.).
-> Gestión de Estado con RxJS: Utilización de BehaviorSubject y Observables para coordinar el avance entre componentes independientes de forma desacoplada.
-> Cero Hardcodeo: Definición de campos e itinerarios de formularios mediante servicios centralizados.Internacionalización (i18n): Cambio dinámico de idioma (Español / Inglés) en tiempo de ejecución.
-> Componentes Standalone: Arquitectura modular siguiendo las mejores prácticas de Angular.
+
+* **Consumo de API RESTful:** Integración completa con `HttpClient` para inicio de sesión, registro de usuarios y renovación de tokens.
+* **Manejo de CORS mediante Proxy (`proxy.conf.json`):** Redirección de peticiones locales desde `/api` hacia el servidor remoto de desarrollo para evitar restricciones de origen cruzado.
+* **Interceptor de Autenticación (`HttpInterceptorFn`):** Inyección automática de tokens de acceso y estrategia de refresco de sesión con manejo de errores HTTP 401.
+* **Persistencia Temporal Local:** Uso de `localStorage` para concatenar los datos recolectados a través del flujo mutipaso antes del envío final al servidor.
+* **Limpieza de Sesión y Datos:** Eliminación de tokens y datos temporales al cerrar sesión o al completar un registro exitoso.
+
 ---
+
 ## 🎯 Objetivos
+
 ### Objetivo General
-Implementar el proceso completo de registro de usuarios mediante formularios reactivos y un servicio centralizado que gestione el avance del proceso, manteniendo una arquitectura mantenible y escalable.
+
+Integrar la aplicación frontend en Angular con una API REST real que permita la autenticación de usuarios mediante tokens JWT y la persistencia de los datos del registro en una base de datos.
+
 ### Objetivos Particulares
-1. Crear los componentes registro, personal, cuenta, direccion y fotografia.
-2. Implementar ProgresoService con BehaviorSubject para llevar el control de la barra de progreso.
-3. Abstraer la configuración de formularios en servicios dedicados (PersonalService, CuentaService, DireccionService, RegistroService).
-4. Configurar la navegación completa de rutas en app.routes.ts.
+
+1. Implementar el servicio `ApiService` para centralizar las peticiones HTTP (`login`, `registrarUsuario`, `refrescarToken`).
+2. Configurar el archivo `proxy.conf.json` para enrutar el tráfico de desarrollo sin bloqueos por CORS.
+3. Crear y registrar un `AuthInterceptor` en `app.config.ts` para adjuntar la cabecera de autorización a las peticiones HTTP.
+4. Conectar los formularios reactivos existentes (*Personal*, *Cuenta*, *Dirección*) con la API para almacenar la información de forma definitiva.
+
 ---
-## 🏗️ Arquitectura y Estructurasrc/
+
+## 🌐 Endpoints de la API
+
+La aplicación redirige las peticiones que inician con `/api` hacia la URL base del servidor objetivo: `http://developer.jquiroz.net:3005`.
+
+| Método | Endpoint | Descripción | Requiere Auth |
+| --- | --- | --- | --- |
+| **POST** | `/api/users/login` | Autentica las credenciales (correo y contraseña) y retorna los tokens de acceso y refresco. | No |
+| **POST** | `/api/users` | Registra un nuevo usuario en la base de datos con toda la información consolidada. | No |
+| **POST** | `/api/users/refresh` | Genera un nuevo `accessToken` utilizando un `refreshToken` válido antes de que expire la sesión. | Sí |
+
+---
+
+## 🏗️ Arquitectura y Estructura
 ```texto
-└── app/
-    ├── componentes/
-    │   ├── registro/    # Vista principal del flujo con barra de progreso
-    │   ├── personal/    # Formulario de datos personales
-    │   ├── cuenta/      # Formulario de datos de cuenta y credenciales
-    │   ├── direccion/   # Formulario de datos de domicilio
-    │   └── fotografia/  # Vista de requisitos y carga de imagen
-    ├── services/
-    │   ├── progreso.ts  # Manejo del estado global de pasos (RxJS)
-    │   ├── registro.ts  # Configuración e íconos del flujo de registro
-    │   ├── personal.ts  # Configuración del formulario personal
-    │   ├── cuenta.ts    # Configuración del formulario cuenta
-    │   └── direccion.ts # Configuración del formulario dirección
-    └── app.routes.ts    # Mapeo de rutas de la aplicación
+src/
+├── app/
+│   ├── componentes/
+│   │   ├── bienvenido/    # Login conectado al endpoint /users/login
+│   │   ├── principal/     # Menú principal con control de sesión
+│   │   ├── registro/      # Envío final de datos consolidados a /users
+│   │   ├── personal/      # Captura y guardado en localStorage
+│   │   ├── cuenta/        # Captura y guardado en localStorage
+│   │   ├── direccion/     # Captura y guardado en localStorage
+│   │   └── fotografia/    # Instrucciones visuales de perfil
+│   ├── interceptor/
+│   │   └── auth-interceptor.ts  # Interceptor funcional para tokens y refresh
+│   ├── services/
+│   │   └── servAPI/
+│   │       └── api.ts     # Servicio principal de llamadas HTTP a la API
+│   ├── app.config.ts      # Registro global de withInterceptors([authInterceptor])
+│   └── app.routes.ts      # Mapeo y protección de rutas del sistema
+├── public/                # Recursos gráficos e idiomas (es.json, en.json)
+└── proxy.conf.json        # Configuración del servidor proxy de desarrollo
 ```
 ---
 ## ⚙️ Componentes y Servicios Implementados
-| Módulo / Servicio | Descripción / Responsabilidad |
+
+| Módulo / Elemento | Descripción / Responsabilidad |
 | --- | --- |
-| ProgresoService  | Mantiene pasoActual y pasosCompletados usando BehaviorSubject. |
-| RegistroService | Provee los metadatos (rutas, íconos, traducciones) de los 4 pasos del registro. |
-| Personal | Formulario para: Nombre, Primer Apellido, Segundo Apellido, Fecha de Nacimiento, Género, Nacionalidad. |
-| Cuenta | Formulario para: Teléfono, Correo Electrónico (con regex pattern), Usuario, Contraseña, Ocupación, Rol. |
-| Direccion | Formulario para: Código Postal, Estado, Ciudad, Colonia, Calle, Núm. Ext, Núm. Int (Opcional), Referencia (Opcional). |
-| Fotografia | Instrucciones para la toma/subida de fotografía y cierre del ciclo de registro. |
+| **`proxy.conf.json`** | Redirige las peticiones desde `/api` hacia `http://developer.jquiroz.net:3005`. |
+| **`ApiService`** | Gestiona los métodos HTTP `login()`, `registrarUsuario()`, `refrescarToken()` y la persistencia de tokens en `localStorage`. |
+| **`AuthInterceptor`** | Inyecta el encabezado `Authorization: Bearer <token>` en cada solicitud HTTP y gestiona la renovación mediante `401 Unauthorized`. |
+| **`Bienvenido`** | Inicia sesión contra la API real, desplegando alertas con mensajes de error personalizados en caso de credenciales inválidas. |
+| **`Registro`** | Valida que los tres formularios requeridos estén completos, unifica el payload y lo envía mediante solicitud `POST` a `/api/users`. |
+
 ---
+
 ## 🛠️ Requisitos Previos
-Antes de ejecutar este proyecto, asegúrate de contar con:
-> Node.js (Versión LTS recomendada)
-> Angular CLI (v17+)
-> Haber ejecutado e integrado los componentes previos de la Parte 1 (bienvenido y principal).
---- 
+
+Antes de ejecutar esta tercera parte del proyecto, asegúrate de contar con:
+
+* **Node.js:** Versión 18 o superior.
+* **Angular CLI:** Versión 17 o superior.
+* Conexión a Internet para comunicarse con el servidor backend en `http://developer.jquiroz.net:3005`.
+
+---
+
 ## 🚀 Instalación y Ejecución
-1. Clonar el repositorio o situarse en el directorio del proyecto:
-```
+
+1. **Clonar el repositorio o situarse en el directorio del proyecto:**
+
+```bash
 cd primeraAplicacion
 ```
-2. Instalar dependencias (si aplica):
-```
+2. **Instalar las dependencias del proyecto:**
+
+```bash
 npm install
 ```
-3. Iniciar el servidor de desarrollo:
+
+3. **Iniciar el servidor con la configuración del Proxy (IMPORTANTE):**
+
+⚠️ Atención: Para que las peticiones hacia /api funcionen correctamente sin errores de CORS, es indispensable iniciar el servidor con el flag --proxy-config:
+```bash
+ng serve --proxy-config proxy.conf.json
 ```
-ng serve
-```
-4. Navegar a la aplicación:
+
+4. **Navegar a la aplicación:**
 Abre tu navegador e ingresa a http://localhost:4200/.
 ---
 ## 🧪 Flujo de Pruebas y Validación
-1. Inicio: Accede a la ruta /registro desde la tarjeta Registro de la pantalla principal.
-2. Paso 1 - Personal: Selecciona el ícono Personal, completa los campos y da clic en Enviar. Se marcará el paso como completado y serás redirigido a Cuenta.
-3. Paso 2 - Cuenta: Ingresa un correo electrónico válido (validado por patrón) y llena los demás campos requeridos.
-4. Paso 3 - Dirección: Completa los datos requeridos. Nota que Número Interior y Referencia son opcionales.
-5. Paso 4 - Fotografía: Revisa las especificaciones visuales y da clic en Continuar.
-6. Resultado: Al finalizar, el sistema redirige a la pantalla /registro, donde se mostrarán los 4 pasos con su estado completado (palomita verde/ícono de confirmación).
-    Nota: La aplicación no cuenta actualmente con persistencia en base de datos o comunicación backend; la información capturada se valida únicamente en el cliente y el avance se mantiene en memoria durante la sesión actual.
+1. Inicio de Sesión Real (/bienvenido):
+
+    > Intenta ingresar un correo no registrado para validar el mensaje de error de credenciales devuelto por el servidor.
+
+    > Ingresa un usuario registrado previamente para confirmar la autenticación exitosa y la redirección a /principal.
+
+2. Proceso de Registro e Integración con la API:
+
+    > Dirígete a la ruta /registro y completa sucesivamente los formularios de Personal, Cuenta y Dirección.
+
+    > En la pantalla de Registro, presiona el botón Registrar. El sistema recopilará los datos temporales del localStorage, enviará la petición POST al endpoint /api/users y mostrará la alerta "Registro exitoso".
+
+3. Validación de Token e Interceptor:
+
+    > Revisa la pestaña Application > LocalStorage en las herramientas de desarrollo de tu navegador para comprobar la presencia de auth_access_token y auth_refresh_token.
