@@ -37,6 +37,7 @@ export class Cuenta implements OnInit {
 
   enviarFormulario() {
     if (this.formulario.valid) {
+      localStorage.setItem('datosFormularioCuenta', JSON.stringify(this.formulario.value));
       this.progresoService.completarPaso(1);
       this.progresoService.establecerPasoActual(2);
       this.router.navigate(['/direccion']);

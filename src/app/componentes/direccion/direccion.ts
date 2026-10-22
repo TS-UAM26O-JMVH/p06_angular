@@ -35,6 +35,7 @@ export class Direccion implements OnInit {
 
   enviarFormulario() {
     if (this.formulario.valid) {
+      localStorage.setItem('datosFormularioDireccion', JSON.stringify(this.formulario.value));
       this.progresoService.completarPaso(2);
       this.progresoService.establecerPasoActual(3);
       this.router.navigate(['/fotografia']);

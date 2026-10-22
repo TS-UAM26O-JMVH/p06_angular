@@ -35,6 +35,7 @@ export class Personal implements OnInit {
 
   enviarFormulario() {
     if (this.formulario.valid) {
+      localStorage.setItem('datosFormularioPersonal', JSON.stringify(this.formulario.value));
       this.progresoService.completarPaso(0);
       this.progresoService.establecerPasoActual(1);
       this.router.navigate(['/cuenta']);
